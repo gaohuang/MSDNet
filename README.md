@@ -11,7 +11,7 @@ Figure 1: MSDNet layout.
 
 <img src="https://cloud.githubusercontent.com/assets/16090466/24482563/3bd3d224-14c0-11e7-98d8-cb4b39be6ad9.png" width="400">
 
-
+## Results
 ### (a) anytime-prediction setting 
 
 Figure 2: Anytime prediction on ImageNet.
