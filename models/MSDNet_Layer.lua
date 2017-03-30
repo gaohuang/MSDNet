@@ -3,7 +3,6 @@ require 'cudnn'
 require 'cunn'
 
 local function build(nChannels, nOutChannels, type, bottleneck, bnWidth)
-
    local net = nn.Sequential()
    local innerChannels = nChannels
    bnWidth = bnWidth or 4
@@ -20,7 +19,7 @@ local function build(nChannels, nOutChannels, type, bottleneck, bnWidth)
    elseif type == 'up' then
       net:add(cudnn.SpatialFullConvolution(innerChannels, nOutChannels, 3,3, 2,2, 1,1, 1,1))
    else
-      error("please implement me: " .. type)
+      error("Please implement me: " .. type)
    end
    net:add(cudnn.SpatialBatchNormalization(nOutChannels))
    net:add(cudnn.ReLU(true))
@@ -37,20 +36,21 @@ local function build_net_normal(nChannels, nOutChannels, bottleneck, bnWidth)
 end
 
 local function build_net_down_normal(nChannels1, nChannels2, nOutChannels, bottleneck, bnWidth1, bnWidth2)
-   local net_warp = nn.Sequential()
+   local net_warpper = nn.Sequential()
    local net = nn.ParallelTable()
-   assert(nOutChannels%2==0,'Grow rate invalid!')
+   assert(nOutChannels % 2 == 0, 'Growth rate invalid!')
    net:add(nn.Identity())
    net:add(build(nChannels1, nOutChannels/2, 'down', bottleneck, bnWidth1))
    net:add(build(nChannels2, nOutChannels/2, 'normal', bottleneck, bnWidth2))
-   net_warp:add(net):add(nn.JoinTable(2))
-   return net_warp
+   net_warpper:add(net):add(nn.JoinTable(2))
+   return net_warpper
 end
+
 
 ----------------
 --- MSDNet_Layer_first:
 ---      the input layer of MSDNet
---- input: a tensor
+--- input: a tensor (orginal image)
 --- output: a table of nScale tensors
 ----------------
 
@@ -65,12 +65,24 @@ function MSDNet_Layer_first:__init(nChannels, nOutChannels, opt)
 
    self.opt = opt
 
-   local nIn = nChannels
    self.modules = {}
-   for i = 1, opt.nScales do
-      local stride  = (i==1) and 1 or 2
+   -- transform raw input to first layer
+   self.modules[1] = nn.Sequential()
+   if opt.dataset == 'cifar10' or opt.dataset == 'cifar100' then
+      self.modules[1]:add(cudnn.SpatialConvolution(nChannels, nOutChannels*opt.grFactor[1], 3,3, 1,1, 1,1))
+      self.modules[1]:add(cudnn.SpatialBatchNormalization(nOutChannels*opt.grFactor[1]))
+      self.modules[1]:add(cudnn.ReLU(true))
+   elseif opt.dataset == 'imagenet' then
+      self.modules[1]:add(cudnn.SpatialConvolution(nChannels,nOutChannels*opt.grFactor[1], 7,7, 2,2, 3,3))
+      self.modules[1]:add(nn.SpatialBatchNormalization(nOutChannels*opt.grFactor[1]))
+      self.modules[1]:add(cudnn.ReLU(true))
+      self.modules[1]:add(nn.SpatialMaxPooling(3,3,2,2,1,1))
+   end
+
+   local nIn = nOutChannels * opt.grFactor[1]
+   for i = 2, opt.nScales do
       self.modules[i] = nn.Sequential()
-      self.modules[i]:add(cudnn.SpatialConvolution(nIn, nOutChannels*opt.grFactor[i], 3,3, stride,stride, 1,1))
+      self.modules[i]:add(cudnn.SpatialConvolution(nIn, nOutChannels*opt.grFactor[i], 3,3, 2,2, 1,1))
       self.modules[i]:add(cudnn.SpatialBatchNormalization(nOutChannels*opt.grFactor[i]))
       self.modules[i]:add(cudnn.ReLU(true))
       nIn = nOutChannels*opt.grFactor[i]
@@ -87,19 +99,16 @@ function MSDNet_Layer_first:updateOutput(input)
       local tmp_output = self:rethrowErrors(self.modules[i], i, 'updateOutput', tmp_input)
       self.output[i]:resizeAs(tmp_output):copy(tmp_output)
    end
-
    return self.output
 end
 
 function MSDNet_Layer_first:updateGradInput(input, gradOutput)
-
    self.gradInput = self.gradInput or input.new()
    self.gradInput:resizeAs(input):zero()
    for i = self.opt.nScales-1, 1, -1 do
       gradOutput[i]:add(self.modules[i+1]:updateGradInput(self.output[i], gradOutput[i+1]))
    end
    self.gradInput:resizeAs(input):copy(self.modules[1]:updateGradInput(input, gradOutput[1]))
-   
    return self.gradInput
 end
 
@@ -133,89 +142,11 @@ function MSDNet_Layer_first:__tostring__()
    return str
 end
 
-local MSDNet_Layer_initial, parent = torch.class('nn.MSDNet_Layer_initial', 'nn.Container')
-
-function MSDNet_Layer_initial:__init(nChannels, opt)
-   parent.__init(self)
-
-   self.train = true
-   self.nChannels = nChannels
-
-   self.opt = opt
-
-   local nIn = nChannels
-   self.modules = {}
-   self.modules[1] = nn.Sequential():add(nn.Identity())
-   for i = 2, opt.nScales do
-      self.modules[i] = nn.Sequential()
-      self.modules[i]:add(cudnn.SpatialConvolution(nChannels*opt.grFactor[i-1], nChannels*opt.grFactor[i], 3,3, 2,2, 1,1))
-      self.modules[i]:add(cudnn.SpatialBatchNormalization(nChannels*opt.grFactor[i]))
-      self.modules[i]:add(cudnn.ReLU(true))
-   end
-
-   self.gradInput = torch.CudaTensor()
-   self.output = {}
-
-end
-
-function MSDNet_Layer_initial:updateOutput(input)
-   for i = 1, self.opt.nScales do
-      self.output[i] = self.output[i] or input.new()
-      local tmp_input = (i==1) and input or self.output[i-1]
-      local tmp_output = self:rethrowErrors(self.modules[i], i, 'updateOutput', tmp_input)
-      self.output[i]:resizeAs(tmp_output):copy(tmp_output)
-   end
-
-   return self.output
-end
-
-function MSDNet_Layer_initial:updateGradInput(input, gradOutput)
-
-   self.gradInput = self.gradInput or input.new()
-   self.gradInput:resizeAs(input):zero()
-   for i = self.opt.nScales-1, 1, -1 do
-      gradOutput[i]:add(self.modules[i+1]:updateGradInput(self.output[i], gradOutput[i+1]))
-   end
-   self.gradInput:resizeAs(input):copy(self.modules[1]:updateGradInput(input, gradOutput[1]))
-   
-   return self.gradInput
-end
-
-function MSDNet_Layer_initial:accGradParameters(input, gradOutput, scale)
-   scale = scale or 1
-   for i = self.opt.nScales, 2, -1 do
-      self.modules[i]:accGradParameters(self.output[i-1], gradOutput[i], scale)
-   end
-   self.modules[1]:accGradParameters(input, gradOutput[1], scale)
-end
-
-function MSDNet_Layer_initial:__tostring__()
-   local tab = '  '
-   local line = '\n'
-   local next = '  |`-> '
-   local lastNext = '   `-> '
-   local ext = '  |    '
-   local extlast = '       '
-   local last = '   ... -> '
-   local str = 'MSDNet_Layer_initial'
-   str = str .. ' {' .. line .. tab .. '{input}'
-   for i=1,#self.modules do
-      if i == #self.modules then
-         str = str .. line .. tab .. lastNext .. '(' .. i .. '): ' .. tostring(self.modules[i]):gsub(line, line .. tab .. extlast)
-      else
-         str = str .. line .. tab .. next .. '(' .. i .. '): ' .. tostring(self.modules[i]):gsub(line, line .. tab .. ext)
-      end
-   end
-   str = str .. line .. tab .. last .. '{output}'
-   str = str .. line .. '}'
-   return str
-end
-
 ----------------
 --- MSDNet_Layer (without upsampling):
----      the middle layers of MSDNet
---- input: a table of nScales tensors
---- output: a table of nScales tensors
+---      subsequent layers of MSDNet
+--- input: a table of `nScales` tensors
+--- output: a table of `nScales` tensors
 ----------------
 
 
@@ -246,13 +177,7 @@ function MSDNet_Layer:__init(nChannels, nOutChannels, opt, inScales, outScales)
    end
    for i = 2, self.outScales do
       local nIn1, nIn2, nOut = nChannels*opt.grFactor[offset+i-1], nChannels*opt.grFactor[offset+i], opt.grFactor[offset+i]*nOutChannels
-      if opt.joinType == 'concat' then
-         self.modules[i] = build_net_down_normal(nIn1, nIn2, nOut, opt.bottleneck, opt.bnFactor[offset+i-1], opt.bnFactor[offset+i])
-      elseif opt.joinType == 'add' then
-         self.modules[i] = nn.CustomAdd(nIn1, nIn2, nOut, opt.bottleneck, opt.bnFactor[offset+i-1], opt.bnFactor[offset+i])
-      else
-         error('Unsupported join type!')
-      end
+      self.modules[i] = build_net_down_normal(nIn1, nIn2, nOut, opt.bottleneck, opt.bnFactor[offset+i-1], opt.bnFactor[offset+i])
    end
 
    self.real_input = {}
@@ -377,80 +302,6 @@ function MSDNet_Layer:__tostring__()
    local str = 'MSDNet_Layer'
    str = str .. ' {' .. line .. tab .. '{input}'
    for i = 1,#self.modules do
-      if i == #self.modules then
-         str = str .. line .. tab .. lastNext .. '(' .. i .. '): ' .. tostring(self.modules[i]):gsub(line, line .. tab .. extlast)
-      else
-         str = str .. line .. tab .. next .. '(' .. i .. '): ' .. tostring(self.modules[i]):gsub(line, line .. tab .. ext)
-      end
-   end
-   str = str .. line .. tab .. last .. '{output}'
-   str = str .. line .. '}'
-   return str
-end
-
-
-----------------
---- CustomAdd (without upsampling):
----      the middle layers of MSDNet
---- input: a table of nScales tensors
---- output: a table of nScales tensors
-----------------
-
-local CustomAdd, parent = torch.class('nn.CustomAdd', 'nn.Container')
-
-function CustomAdd:__init(nChannels1, nChannels2, nOutChannels, bottleneck, bnWidth1, bnWidth2, opt)
-   parent.__init(self)
-
-   self.train = true
-   self.nChannels = nChannels
-
-   self.opt = opt
-
-   self.modules[1] = nn.Sequential()
-               :add(nn.ParallelTable()
-                  :add(build(nChannels1, nOutChannels, 'down', bottleneck, bnWidth1))
-                  :add(build(nChannels2, nOutChannels, 'normal', bottleneck, bnWidth2)))
-               :add(nn.CAddTable(true))
-   self.modules[2] = nn.JoinTable(2)
-
-   self.gradInput = torch.CudaTensor()
-   self.output = {}
-
-end
-
-function CustomAdd:updateOutput(input)
-
-   local tmp_output = self:rethrowErrors(self.modules[1], 1, 'updateOutput', {input[2], input[3]})
-   self.output = self:rethrowErrors(self.modules[2], 2, 'updateOutput', {input[1],tmp_output})
-
-   return self.output
-end
-
-function CustomAdd:updateGradInput(input, gradOutput)
-
-   local gIn2 = self.modules[2]:updateGradInput({input[1], self.modules[1].output}, gradOutput)
-   local gIn1 = self.modules[1]:updateGradInput({input[2], input[3]}, gIn2[2])
-   self.gradInput = {gIn2[1], gIn1[1], gIn1[2]}
-   
-   return self.gradInput
-end
-
-function CustomAdd:accGradParameters(input, gradOutput, scale)
-   scale = scale or 1
-   self.modules[1]:accGradParameters({input[2], input[3]}, self.modules[2].gradInput[2], scale)
-end
-
-function CustomAdd:__tostring__()
-   local tab = '  '
-   local line = '\n'
-   local next = '  |`-> '
-   local lastNext = '   `-> '
-   local ext = '  |    '
-   local extlast = '       '
-   local last = '   ... -> '
-   local str = 'CustomAdd'
-   str = str .. ' {' .. line .. tab .. '{input}'
-   for i=1,#self.modules do
       if i == #self.modules then
          str = str .. line .. tab .. lastNext .. '(' .. i .. '): ' .. tostring(self.modules[i]):gsub(line, line .. tab .. extlast)
       else
