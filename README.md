@@ -25,7 +25,7 @@ Figure 3: Prediction under batch computational budget on ImageNet.
 
 <img src="https://cloud.githubusercontent.com/assets/16090466/24482632/da038f16-14c0-11e7-8864-ca5c20bcafde.png" width="400">
 
-Figure 4: Random example images from the ImageNet classes \emph{Red wine} and \emph{Volcano}. Top row: images exited from the first classification layer of a \methodnameshort{} with correct prediction; Bottom row: images failed to be correctly classified at the first classifier but were correctly predicted and exited at the last layer.
+Figure 4: Random example images from the ImageNet classes *Red wine* and *Volcano*. Top row: images exited from the first classification layer of an MSDNet with correct prediction; Bottom row: images failed to be correctly classified at the first classifier but were correctly predicted and exited at the last layer.
 
 <img src="https://cloud.githubusercontent.com/assets/16090466/24482639/e5666626-14c0-11e7-99d3-5f39a2a631ac.png" width="400">
 
