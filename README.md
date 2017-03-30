@@ -34,7 +34,7 @@ Figure 4: Random example images from the ImageNet classes *Red wine* and *Volcan
 
 Our code is written under the framework of Torch ResNet (https://github.com/facebook/fb.resnet.torch). The training scripts come with several options, which can be listed with the `--help` flag.
 
-    `th main.lua --help`
+    th main.lua --help
 
 #### Configuration
 
@@ -45,9 +45,9 @@ images on ImageNet as the validation set.
 
 #### Training recipe
 
-Train an MSDNet with 11 classifiers attached to every other layer for anytime prediction:
+Train an MSDNet with 10 classifiers attached to every other layer for anytime prediction:
 ```bash
-th main.lua -netType msdnet -dataset cifar10 -batchSize 64 -nEpochs 300 -nBlocks 11 -stepmode even -step 2 -base 4
+th main.lua -netType msdnet -dataset cifar10 -batchSize 64 -nEpochs 300 -nBlocks 10 -stepmode even -step 2 -base 4
 ```
 
 Train an MSDNet with 7 classifiers with the span linearly increases for efficient batch computation:
