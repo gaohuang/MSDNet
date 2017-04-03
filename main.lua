@@ -93,7 +93,7 @@ for epoch = startEpoch, opt.nEpochs do
    end
 
    -- Log results to text file
-   local filename = 'result_'
+   local filename = paths.concat(opt.save, 'result_')
    save2txt(filename..'valSingle', valSingle)
    save2txt(filename..'valEnsemble', valEnsemble)
    if opt.validset == true then
