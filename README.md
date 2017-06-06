@@ -7,25 +7,30 @@ This repository provides the code for the paper [Multi-Scale Dense Convolutional
 
 This paper studies convolutional networks that require limited computational resources at test time. We develop a new network architecture that performs on par with state-of-the-art convolutional networks, whilst facilitating prediction in two settings: (1) an anytime-prediction setting in which the network's prediction for one example is progressively updated, facilitating the output of a prediction at any time; and (2) a batch computational budget setting in which a fixed amount of computation is available to classify a set of examples that can be spent unevenly across 'easier' and 'harder' examples. 
 
-Figure 1: MSDNet layout.
+**Figure 1**: MSDNet layout (2D).
 
-<img src="https://cloud.githubusercontent.com/assets/16090466/24482563/3bd3d224-14c0-11e7-98d8-cb4b39be6ad9.png" width="400">
+<img src="https://cloud.githubusercontent.com/assets/6460942/26835456/61a77e08-4aa6-11e7-82be-7eb09a765d7c.png" width="650">
+
+**Figure 2**: MSDNet layout (3D).
+
+<img src="https://cloud.githubusercontent.com/assets/6460942/26835513/6daa5630-4aa6-11e7-999d-4d4e0c372105.png" width="650">
+
 
 ## Results
 ### (a) anytime-prediction setting 
 
-Figure 2: Anytime prediction on ImageNet.
+**Figure 3**: Anytime prediction on ImageNet.
 
 <img src="https://cloud.githubusercontent.com/assets/16090466/24482636/e00c3ad4-14c0-11e7-93b6-cb7a6feb7634.png" width="400">
 
 
 ### (b) batch computational budget setting
 
-Figure 3: Prediction under batch computational budget on ImageNet.
+**Figure 4**: Prediction under batch computational budget on ImageNet.
 
 <img src="https://cloud.githubusercontent.com/assets/16090466/24482632/da038f16-14c0-11e7-8864-ca5c20bcafde.png" width="400">
 
-Figure 4: Random example images from the ImageNet classes *Red wine* and *Volcano*. Top row: images exited from the first classification layer of an MSDNet with correct prediction; Bottom row: images failed to be correctly classified at the first classifier but were correctly predicted and exited at the last layer.
+**Figure 5**: Random example images from the ImageNet classes `Red wine` and `Volcano`. Top row: images exited from the first classification layer of an MSDNet with correct prediction; Bottom row: images failed to be correctly classified at the first classifier but were correctly predicted and exited at the last layer.
 
 <img src="https://cloud.githubusercontent.com/assets/16090466/24482639/e5666626-14c0-11e7-99d3-5f39a2a631ac.png" width="400">
 
