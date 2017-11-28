@@ -48,12 +48,13 @@ local trainer = Trainer(model, criterion, opt, optimState)
 
 -- Test only, need to specify -save and -retrain
 if opt.testOnly then
-   local flops = torch.load(paths.concat(opt.save, 'flops.t7'))
-   opt.nBlocks = #flops
+   -- local flops = torch.load(paths.concat(opt.save, 'flops.t7'))
+   -- opt.nBlocks = #flops
    local top1ErrValid, top5Err, top1ErrEnsembleValid, top5ErrEnsemble = trainer:test(0, valLoader)
    local top1Err, top5Err, top1ErrEnsemble, top5ErrEnsemble = trainer:test(0, testLoader)
    print('results from: ' .. opt.save)
-   print('flops: \n', flops,
+   print(
+      -- 'flops: \n', flops,
          '\nval single: \n', top1ErrValid,
          '\n val ensemble: \n', top1ErrEnsembleValid,
          '\n test single:\n', top1Err,

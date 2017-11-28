@@ -87,9 +87,9 @@ local function build_classifier_imagenet(nChannels, nClass)
 	return c
 end
 
-local JointTrain, parent = torch.class('nn.JointTrain', 'nn.Container')
+local JointTrainModule, parent = torch.class('nn.JointTrainModule', 'nn.Container')
 
-function JointTrain:__init(nChannels, opt)
+function JointTrainModule:__init(nChannels, opt)
 	parent.__init(self)
 
 	self.train = true
@@ -131,7 +131,7 @@ function JointTrain:__init(nChannels, opt)
 
 end
 
-function JointTrain:updateOutput(input)
+function JointTrainModule:updateOutput(input)
 	for i = 1, self.nBlocks do
 		local tmp_input = (i==1) and input or self.modules[i-1].output
 		local tmp_output1 = self:rethrowErrors(self.modules[i], i, 'updateOutput', tmp_input)
@@ -141,7 +141,7 @@ function JointTrain:updateOutput(input)
 	return self.output
 end
 
-function JointTrain:updateGradInput(input, gradOutput)
+function JointTrainModule:updateGradInput(input, gradOutput)
 
 local nScales = self.opt.nScales
 	for i = self.nBlocks, 1, -1 do
@@ -167,7 +167,7 @@ self.gradInput = self.modules[1].gradInput
 return self.gradInput
 end
 
-function JointTrain:accGradParameters(input, gradOutput, scale)
+function JointTrainModule:accGradParameters(input, gradOutput, scale)
 	scale = scale or 1
 	for i = self.nBlocks, 1, -1 do
 		local features = self.modules[i].output[#self.modules[i].output]
@@ -183,7 +183,7 @@ function JointTrain:accGradParameters(input, gradOutput, scale)
 end
 end
 
-function JointTrain:__tostring__()
+function JointTrainModule:__tostring__()
 	local tab = '  '
 	local line = '\n'
 	local next = '  |`-> '
@@ -191,7 +191,7 @@ function JointTrain:__tostring__()
 	local ext = '  |    '
 	local extlast = '       '
 	local last = '   ... -> '
-	local str = 'JointTrain'
+	local str = 'JointTrainModule'
 	str = str .. ' {' .. line .. tab .. '{input}'
 	for i=1,#self.modules do
 	  if i == #self.modules then

@@ -7,20 +7,13 @@ local function createModel(opt)
    if opt.stepmode == 'even' then
       assert(opt.base - opt.step >= 0, 'Base should not be smaller than step!')
    end
-   local nChannels -- input channels of the first MSDNet layer
-   if opt.dataset == 'cifar10' or opt.dataset == 'cifar100' then
-      nChannels = 16
-   elseif opt.dataset == 'imagenet' then
-      nChannels = 64
-   else
-      error('invalid dataset: ' .. opt.dataset)
-   end
+   local nChannels = opt.initChannels>0 and opt.initChannels or 32
 
 
    -- (2) build model
    print(' | MSDNet-Block' .. opt.nBlocks.. '-'..opt.step .. ' ' .. opt.dataset)
-   local model = nn.JointTrain(nChannels, opt)
-
+   local model = nn.Sequential()
+   model:add(nn.JointTrainModule(nChannels, opt))
 
    -- (3) init model
    local function ConvInit(name)

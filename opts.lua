@@ -61,6 +61,7 @@ function M.parse(arg)
    cmd:option('-prune',          'max',      'specify how to prune the network, min | max')
    cmd:option('-joinType',       'concat',   'add or concat for features from different paths')
    cmd:option('-bnFactor',       '1-2-4-4',  'bottleneck factor of each sacle, 4-4-4-4 | 1-2-4-4')
+   cmd:option('-initChannels', 0, 'number of features produced by the initial conv layer')
 
    ---------- joint training options ----------------------------------
    cmd:option('-clearstate', 'true', 'save a model with clearsate or not')
