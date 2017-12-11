@@ -1,6 +1,6 @@
 # MSDNet
 
-This repository provides the code for the paper [Multi-Scale Dense Convolutional Networks for Efficient Prediction](http://arxiv.org/abs/1703.09844).
+This repository provides the code for the paper [Multi-Scale Dense Networks for Resource Efficient Image Classification](http://arxiv.org/abs/1703.09844).
 
 
 ## Introduction
@@ -59,3 +59,11 @@ Train an MSDNet with 7 classifiers with the span linearly increases for efficien
 ```bash
 th main.lua -netType msdnet -dataset cifar10 -batchSize 64 -nEpochs 300 -nBlocks 7 -stepmode lin_grow -step 1 -base 1
 ```
+
+#### Pre-trained ImageNet Models
+
+1. Download model checkpoint [msdnet-step4.t7](http://www.cs.cornell.edu/~gaohuang/models/msdnet--step=4--block=5--growthRate=16.t7) or [msdnet-step7.t7](http://www.cs.cornell.edu/~gaohuang/models/msdnet--step=7--block=5--growthRate=16.t7), and also the [validation set indices](http://www.cs.cornell.edu/~gaohuang/models/imagenet_withvalid.t7).
+
+	
+2. Testing script: `th main.lua -dataset imagenet -testOnly true -resume <path-to-.t7-model> -data <path-to-image-net-data> -gen <path-to-validation-set-indices>`
+
