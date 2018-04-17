@@ -67,3 +67,14 @@ th main.lua -netType msdnet -dataset cifar10 -batchSize 64 -nEpochs 300 -nBlocks
 	
 2. Testing script: `th main.lua -dataset imagenet -testOnly true -resume <path-to-.t7-model> -data <path-to-image-net-data> -gen <path-to-validation-set-indices>`
 
+## FAQ
+
+1. How to calculate the FLOPs (or mul-add op) of a model?
+
+We strongly recommend doing it automatically. Please refer to the [op-counter](https://github.com/apaszke/torch-opCounter) project (LuaTorch), or the [script](https://github.com/ShichenLiu/CondenseNet/blob/master/utils.py#L58-L162) in ConDenseNet (PyTorch). The basic idea of these op counters is to add a hook before the forward pass of a model.
+
+
+
+
+
+
