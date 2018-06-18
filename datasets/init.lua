@@ -12,6 +12,7 @@
 local M = {}
 
 local function isvalid(opt, cachePath)
+   if opt.testOnly == true then return true end -- don't check the basedir in test mode
    local imageInfo = torch.load(cachePath)
    if imageInfo.basedir and imageInfo.basedir ~= opt.data then
       return false
