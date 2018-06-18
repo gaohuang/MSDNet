@@ -7,8 +7,15 @@ local function createModel(opt)
    if opt.stepmode == 'even' then
       assert(opt.base - opt.step >= 0, 'Base should not be smaller than step!')
    end
-   local nChannels = opt.initChannels>0 and opt.initChannels or 32
 
+   local nChannels
+   if opt.dataset == 'cifar10' or opt.dataset == 'cifar100' then
+      nChannels = opt.initChannels>0 and opt.initChannels or 16
+   elseif opt.dataset == 'imagenet' then
+      nChannels = opt.initChannels>0 and opt.initChannels or 64
+   else
+      error('invalid dataset: ' .. opt.dataset)
+   end
 
    -- (2) build model
    print(' | MSDNet-Block' .. opt.nBlocks.. '-'..opt.step .. ' ' .. opt.dataset)
@@ -69,6 +76,8 @@ local function createModel(opt)
    file:write('\n model definition \n\n')
    file:write(model:__tostring__())
    file:close()
+
+   print(model)
 
    return model
 end
