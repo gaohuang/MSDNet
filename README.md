@@ -62,8 +62,7 @@ th main.lua -netType msdnet -dataset cifar10 -batchSize 64 -nEpochs 300 -nBlocks
 
 #### Pre-trained ImageNet Models
 
-1. Download model checkpoint [msdnet-step4.t7](http://www.cs.cornell.edu/~gaohuang/models/msdnet--step=4--block=5--growthRate=16.t7) or [msdnet-step7.t7](http://www.cs.cornell.edu/~gaohuang/models/msdnet--step=7--block=5--growthRate=16.t7), and also the [validation set indices](http://www.cs.cornell.edu/~gaohuang/models/imagenet_withvalid.t7).
-
+1. [Download](https://www.dropbox.com/sh/n0xxbgvsql0rqna/AADrVbTVKyo4YVN-HqmjPWs5a?dl=0) model checkpoints and the validation set indeces.
 	
 2. Testing script: `th main.lua -dataset imagenet -testOnly true -resume <path-to-.t7-model> -data <path-to-image-net-data> -gen <path-to-validation-set-indices>`
 
