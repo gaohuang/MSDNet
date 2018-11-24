@@ -62,7 +62,7 @@ th main.lua -netType msdnet -dataset cifar10 -batchSize 64 -nEpochs 300 -nBlocks
 
 #### Pre-trained ImageNet Models
 
-1. [Download](https://www.dropbox.com/sh/n0xxbgvsql0rqna/AADrVbTVKyo4YVN-HqmjPWs5a?dl=0) model checkpoints and the validation set indeces.
+1. [Download](https://www.dropbox.com/sh/elnyjl4xdi4zyas/AACxCdjV-RWYrHYfbz61FFDma?dl=0) model checkpoints and the validation set indeces.
 	
 2. Testing script: `th main.lua -dataset imagenet -testOnly true -resume <path-to-.t7-model> -data <path-to-image-net-data> -gen <path-to-validation-set-indices>`
 
