@@ -2,6 +2,9 @@
 
 This repository provides the code for the paper [Multi-Scale Dense Networks for Resource Efficient Image Classification](http://arxiv.org/abs/1703.09844).
 
+### Update on April 3, 2019 -- PyTorch implementation released!
+[A PyTorch implementation of MSDNet can be found from here.](https://github.com/kalviny/MSDNet-PyTorch)
+
 
 ## Introduction
 
